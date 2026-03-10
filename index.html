@@ -254,6 +254,140 @@
         .card:hover {
             background: #fcfcfc;
         }
+
+        /* =========================================
+   [모듈: 집중 루틴 스와이프 전용 스타일]
+   ========================================= */
+.routine-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+    overflow: hidden; /* 스와이프 시 삐져나감 방지 */
+}
+
+/* 포커스 모드: 리스트 전체에 active-mode가 걸리면, 비활성 카드는 흐려짐 */
+.routine-list.active-mode .routine-card:not(.active) {
+    opacity: 0.4;
+    transform: scale(0.98);
+}
+
+.routine-card {
+    position: relative;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    touch-action: pan-y; /* 수직 스크롤은 허용, 수평 스와이프는 JS로 제어 */
+    user-select: none;
+    overflow: hidden;
+}
+
+/* 진행바 (물이 차오르는 효과) */
+.routine-bg-progress {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 0%;
+    background-color: rgba(46, 170, 220, 0.1);
+    transition: width 1s linear;
+    z-index: 1;
+}
+
+.routine-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.routine-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.routine-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-main);
+    transition: color 0.3s;
+}
+
+.routine-timer {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums; /* 숫자 너비 고정 */
+    opacity: 0; /* 기본 상태에선 숨김 */
+    height: 0;
+    transition: opacity 0.3s, height 0.3s;
+}
+
+/* 활성화(진행 중) 상태 */
+.routine-card.active {
+    border-color: #2eaadc;
+    box-shadow: 0 4px 12px rgba(46, 170, 220, 0.15);
+    padding: 20px 16px; /* 살짝 확장되는 효과 */
+}
+
+.routine-card.active .routine-timer {
+    opacity: 1;
+    height: 18px;
+    color: #2eaadc;
+    font-weight: 600;
+}
+
+.play-btn {
+    background: #f1f1ef;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-main);
+    transition: background 0.2s;
+}
+
+.play-btn:hover { background: #e1e1df; }
+
+/* 완료 상태 및 스와이프 관련 */
+.routine-card.completed {
+    background-color: #eaf6ed;
+    border-color: #c3e6cb;
+    transform: translateX(0) !important;
+}
+
+.routine-card.completed .routine-content {
+    opacity: 0; /* 기존 내용 숨김 */
+    pointer-events: none;
+}
+
+.routine-done-msg {
+    position: absolute;
+    top: 50%; left: 16px;
+    transform: translateY(-50%);
+    color: #218838;
+    font-weight: 600;
+    font-size: 15px;
+    opacity: 0;
+    z-index: 3;
+    transition: opacity 0.3s;
+}
+
+.routine-card.completed .routine-done-msg {
+    opacity: 1;
+}
+
+.routine-card.fade-out {
+    opacity: 0;
+    margin-top: -60px; /* 위로 당겨지며 사라짐 */
+    transition: all 0.5s ease;
+}
     </style>
 </head>
 <body>
@@ -294,23 +428,36 @@
                 </div>
             </div>
 
-            <h2 class="block">진행 상황 (To-Do)</h2>
-            <div class="todo-item block">
-                <div class="todo-checkbox checked" onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('checked');"></div>
-                <div class="todo-text checked">에듀테크 시장 동향 및 트렌드 파악 (NotebookLM 활용)</div>
+            <h2 class="block">🔥 오늘의 집중 루틴</h2>
+<p class="block" style="color: var(--text-muted); font-size: 14px; margin-top: -10px;">
+    재생 버튼을 눌러 시작하고, 완료 후엔 카드를 오른쪽으로 시원하게 밀어주세요(Swipe)!
+</p>
+
+<div class="routine-list" id="routineList">
+    <div class="routine-card" data-id="task-1">
+        <div class="routine-bg-progress"></div>
+        <div class="routine-content">
+            <div class="routine-info">
+                <span class="routine-title">알고리즘 1문제 풀기 (백준)</span>
+                <span class="routine-timer">00:00:00</span>
             </div>
-            <div class="todo-item block">
-                <div class="todo-checkbox checked" onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('checked');"></div>
-                <div class="todo-text checked">Classting, Canvas 등 주요 경쟁사 LTI 1.3 표준 분석</div>
+            <button class="play-btn">▶</button>
+        </div>
+        <div class="routine-done-msg">✔ 수고했어요! <span class="recorded-time"></span> 기록됨</div>
+    </div>
+
+    <div class="routine-card" data-id="task-2">
+        <div class="routine-bg-progress"></div>
+        <div class="routine-content">
+            <div class="routine-info">
+                <span class="routine-title">자소서 지원동기 초안 작성</span>
+                <span class="routine-timer">00:00:00</span>
             </div>
-            <div class="todo-item block">
-                <div class="todo-checkbox" onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('checked');"></div>
-                <div class="todo-text">핵심 타겟 페르소나 및 페인포인트 도출</div>
-            </div>
-            <div class="todo-item block">
-                <div class="todo-checkbox" onclick="this.classList.toggle('checked'); this.nextElementSibling.classList.toggle('checked');"></div>
-                <div class="todo-text">LLM 기반 자동 채점(Auto-Grading) 아키텍처 설계</div>
-            </div>
+            <button class="play-btn">▶</button>
+        </div>
+        <div class="routine-done-msg">✔ 수고했어요! <span class="recorded-time"></span> 기록됨</div>
+    </div>
+</div>
 
             <h2 class="block">주요 기능 요구사항 (Kanban)</h2>
             <div class="board block">
@@ -350,6 +497,123 @@
             </p>
         </div>
     </div>
+<script>
+/* =========================================
+   [모듈: 집중 루틴 타이머 & 스와이프 로직]
+   ========================================= */
+document.addEventListener('DOMContentLoaded', () => {
+    const listContainer = document.getElementById('routineList');
+    const cards = document.querySelectorAll('.routine-card');
 
+    cards.forEach(card => {
+        const playBtn = card.querySelector('.play-btn');
+        const timerDisplay = card.querySelector('.routine-timer');
+        const progressBg = card.querySelector('.routine-bg-progress');
+        const recordedTimeSpan = card.querySelector('.recorded-time');
+        
+        let timerInterval = null;
+        let seconds = 0;
+        let isPlaying = false;
+
+        // [기능 1] 타이머 재생/일시정지 (Zero-Depth)
+        playBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 스와이프 이벤트와 충돌 방지
+            
+            isPlaying = !isPlaying;
+            
+            if (isPlaying) {
+                // 시작
+                playBtn.innerHTML = '⏸';
+                card.classList.add('active');
+                listContainer.classList.add('active-mode'); // 주변 카드 Dimming
+                
+                timerInterval = setInterval(() => {
+                    seconds++;
+                    timerDisplay.textContent = formatTime(seconds);
+                    // 시각적 동기부여 (임의로 1시간(3600초) 기준 100% 차오르게 설정)
+                    const percent = Math.min((seconds / 3600) * 100, 100);
+                    progressBg.style.width = `${percent}%`;
+                }, 1000);
+            } else {
+                // 일시정지
+                playBtn.innerHTML = '▶';
+                clearInterval(timerInterval);
+                // 일시정지 시 주변 Dimming 해제할지 여부 (여기선 유지)
+            }
+        });
+
+        // [기능 2] 스와이프-투-컴플릿 (Swipe to Complete)
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
+        const SWIPE_THRESHOLD = 120; // 이 픽셀 이상 밀면 완료 처리
+
+        // 터치 및 마우스 이벤트 통합 처리
+        const startDrag = (e) => {
+            // 재생 중(active)일 때만 스와이프 허용하도록 하려면 아래 조건 해제
+            // if(!card.classList.contains('active')) return;
+            isDragging = true;
+            startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+            card.style.transition = 'none'; // 드래그 중에는 애니메이션 끄기
+        };
+
+        const onDrag = (e) => {
+            if (!isDragging) return;
+            currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+            const diffX = currentX - startX;
+
+            // 오른쪽으로만 밀리게 제한
+            if (diffX > 0) {
+                card.style.transform = `translateX(${diffX}px)`;
+            }
+        };
+
+        const endDrag = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            card.style.transition = 'transform 0.3s, background-color 0.3s'; // 애니메이션 복구
+            const diffX = currentX - startX;
+
+            if (diffX > SWIPE_THRESHOLD) {
+                // 완료 처리
+                clearInterval(timerInterval);
+                listContainer.classList.remove('active-mode');
+                
+                card.classList.add('completed');
+                card.classList.remove('active');
+                recordedTimeSpan.textContent = formatTime(seconds);
+                
+                // 1.5초 후 리스트에서 사라짐 (완료함으로 이동 등 연계 가능)
+                setTimeout(() => {
+                    card.classList.add('fade-out');
+                    setTimeout(() => card.remove(), 500); // DOM에서 완전 제거
+                }, 1500);
+
+            } else {
+                // 임계치 미달 시 원위치
+                card.style.transform = `translateX(0)`;
+            }
+        };
+
+        // 모바일 터치 이벤트
+        card.addEventListener('touchstart', startDrag, {passive: true});
+        card.addEventListener('touchmove', onDrag, {passive: true});
+        card.addEventListener('touchend', endDrag);
+
+        // PC 마우스 이벤트 (테스트용)
+        card.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', endDrag);
+    });
+
+    // 시간 포맷팅 헬퍼 함수 (00:00:00)
+    function formatTime(totalSeconds) {
+        const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const s = String(totalSeconds % 60).padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    }
+});
+</script>
 </body>
 </html>
